@@ -96,7 +96,7 @@ Windows 会把它存进「凭据管理器」，之后不用再输。
 ### 1.4 把本地代码推上去（在 racecar 目录里执行）
 
 ```powershell
-cd C:\Users\ASUS\Documents\deepseek-harness\default-workspace\racecar
+cd D:\racecar
 
 # 用 SSH（对应方案 A）
 git remote add origin git@github.com:你的用户名/racecar.git
@@ -533,11 +533,11 @@ cd ~/racecar && git pull
 ## 附：这个仓库现在是什么状态
 
 ```
-仓库位置：  C:\Users\ASUS\Documents\deepseek-harness\default-workspace\racecar
-当前分支：  main（原 master，已改名）
+仓库位置：  D:\racecar
+当前分支：  main（跟踪 origin/main）
+远端：      origin  git@github.com:Pluto-KCL/racecar.git
 首次提交：  091c5d5  init: 项目骨架 + 接口协议 v1.0
 已跟踪文件：39 个
-远端：      还没有（需要你们按 1.2 → 1.4 建 GitHub 私有仓库并 push）
 ```
 
 **下一步就一件事：GitHub 建 Private 仓库 → 配 SSH → 敲那三行 push。**
