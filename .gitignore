@@ -1,0 +1,54 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# ---- Keil MDK ----
+*.uvguix.*
+*.uvoptx
+*.scvd
+Objects/
+Listings/
+DebugConfig/
+RTE/
+*.dep
+*.crf
+*.o
+*.d
+*.axf
+*.hex
+*.bin
+*.map
+*.lst
+
+# ---- STM32CubeIDE ----
+Debug/
+Release/
+.settings/
+.cproject
+.project
+.mxproject
+
+# ---- 编辑器 ----
+.vscode/
+.idea/
+*.swp
+
+# ---- 现场素材（体积大，放网盘不放 git） ----
+media/*.mp4
+media/*.avi
+media/*.mov
+media/*.bag
+
+# ---- 密钥 / 本机配置 ----
+vision/local_config.py
+*.secret
+!*.secret.example
+
+# ---- 系统垃圾 ----
+Thumbs.db
+desktop.ini
+.DS_Store

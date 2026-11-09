@@ -1,0 +1,21 @@
+# 树莓派依赖说明
+#
+# 1) picamera2 / OpenCV 用系统包装（pip 装 picamera2 常缺 libcamera 绑定，会白调一下午）：
+#      sudo apt update
+#      sudo apt install -y python3-picamera2 python3-opencv python3-smbus i2c-tools
+#
+# 2) 其余用 pip 装：
+#      python3 -m pip install -r requirements.txt --break-system-packages
+#
+# 3) 跑之前确认串口开着：
+#      sudo raspi-config  ->  Interface Options -> Serial Port
+#      登录 shell 可用串口选 "No"，硬件串口使能选 "Yes"
+#      然后 ls -l /dev/serial0   （应该指向 ttyAMA0 或 ttyS0）
+
+pyserial>=3.5
+numpy>=1.24
+# 只在 PC 上调参时需要（树莓派上已由 python3-opencv 提供，别重复装）：
+# opencv-python>=4.8
+# luma.oled>=3.13          # OLED 显示
+# smbus2>=0.4              # TCS34725
+# pillow>=9.0              # luma.oled 依赖
