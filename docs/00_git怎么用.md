@@ -41,65 +41,140 @@
 
 所以必须先有一个「远端仓库」（remote）——一个三个人都能访问的服务器地址。
 
-### 1.1 选哪个
+### 1.1 用哪个平台
 
 | 方案 | 优点 | 缺点 | 建议 |
 |---|---|---|---|
-| **Gitee（码云）** | 国内快、私有仓库免费、注册用手机号 | 需要实名 | ✅ **首选** |
-| GitHub | 生态好 | 国内经常连不上 | 备用 |
+| **GitHub** | 私有仓库免费、生态最全、以后写简历或比赛要代码链接直接可用 | 国内访问不稳，偶尔要折腾一下网络 | ✅ **首选** |
+| Gitee（码云） | 国内快、推送不转圈 | 生态弱，外人基本不看 | 备选（GitHub 实在连不上时） |
 | 局域网共享盘 | 不用注册 | 会互相覆盖文件、`.git` 在共享盘上容易锁死 | ❌ 别用 |
 | 每天发 zip 到群里 | 零成本 | 三天后没人知道哪版是对的 | ❌ 别用 |
 
-**结论：用 Gitee，建一个私有仓库。**
+**结论：用 GitHub，建一个 Private 仓库。**网络问题见 1.6，有解。
 
 ### 1.2 建仓库（由一个人做，建议 C）
 
-1. 打开 https://gitee.com ，注册（手机号即可）
-2. 右上角 `+` → **新建仓库**
+1. 打开 https://github.com ，注册（邮箱即可）
+2. 右上角 `+` → **New repository**
 3. 填写：
-   - 仓库名称：`racecar`
-   - **是否开源：私有**（很重要，比赛期间别公开）
-   - **不要**勾选「使用 Readme 初始化仓库」（会跟本地文件打架）
-4. 建好后页面会给一个地址，形如：
-   `https://gitee.com/你的用户名/racecar.git`
+   - Repository name：`racecar`
+   - 可见性选 **Private**（比赛期间别公开）
+   - **下面三个初始化选项全部不要勾**：
+     `Add a README file`、`Add .gitignore`、`Choose a license`
+     （勾了服务器会先生成一个提交，和你本地历史打架，push 直接被拒）
+4. **Create repository** → 页面给出地址，形如：
+   `https://github.com/你的用户名/racecar.git`
 
-### 1.3 把本地代码推上去（在 racecar 目录里执行）
+### 1.3 先解决"怎么证明你是你"
+
+⚠️ **GitHub 不能用登录密码 push**，必须用下面两种之一。**推荐 SSH，配一次永久有效。**
+
+#### 方案 A：SSH（推荐，配一次不用再管）
+
+```powershell
+ssh-keygen -t ed25519 -C "你的邮箱@example.com"
+# 一路回车即可（passphrase 可以留空）
+cat ~/.ssh/id_ed25519.pub
+```
+
+复制输出的**整行**（以 `ssh-ed25519` 开头）→ GitHub 右上角头像 → **Settings** → 左栏 **SSH and GPG keys** → **New SSH key** → 标题随便写 → 粘贴 → **Add SSH key**。
+
+验证：
+
+```powershell
+ssh -T git@github.com
+# 出现 "Hi 你的用户名! You've successfully authenticated" 就成功
+```
+
+#### 方案 B：HTTPS + 令牌（PAT）
+
+GitHub → 头像 → **Settings** → 左栏最下 **Developer settings** → **Personal access tokens** → **Tokens (classic)** → **Generate new token (classic)** → 勾 `repo` → 生成 → **立刻复制**（只显示一次，关了就没有）。
+
+push 弹窗时：用户名填 GitHub 用户名，**密码填这串 token**。
+Windows 会把它存进「凭据管理器」，之后不用再输。
+
+### 1.4 把本地代码推上去（在 racecar 目录里执行）
 
 ```powershell
 cd C:\Users\ASUS\Documents\deepseek-harness\default-workspace\racecar
 
-git remote add origin https://gitee.com/你的用户名/racecar.git
+# 用 SSH（对应方案 A）
+git remote add origin git@github.com:你的用户名/racecar.git
+
+# 用 HTTPS（对应方案 B），二选一：
+# git remote add origin https://github.com/你的用户名/racecar.git
+
 git branch -M main
 git push -u origin main
 ```
 
-> 第一次 push 会弹窗要账号密码。**密码填 Gitee 的「私人令牌」，不是登录密码** ——
-> Gitee → 设置 → 私人令牌 → 生成新令牌（勾 `projects` 权限）→ 复制那串字符当密码用。
+### 1.5 另外两个人把仓库拉下来
 
-### 1.4 另外两个人把仓库拉下来
-
-A 和 B 在**自己电脑**上，装好 git 后：
+A 和 B 在**自己电脑**上：
 
 ```powershell
 cd D:\            # 或者任何你想放的位置
-git clone https://gitee.com/你的用户名/racecar.git
-cd racecar
 
+git clone git@github.com:你的用户名/racecar.git        # SSH
+# git clone https://github.com/你的用户名/racecar.git  # HTTPS
+
+cd racecar
 git config user.name  "张三"
 git config user.email "zhangsan@example.com"
 ```
 
-> 这两行 `config` 每人**只需做一次**，作用是让你提交的记录上显示你的名字。
-> 不配的话，提交记录会显示成别人的名字，出问题找不到人。
+> 那两行 `config` 每人**只需做一次**。
+> **email 最好和你 GitHub 账号的邮箱一致**，否则 GitHub 上那些提交认不出是你，贡献统计里一片空白。
 
-### 1.5 验证一下
+### 1.6 国内连不上 GitHub 怎么办
+
+按顺序试，前两条能解决绝大多数情况：
+
+**① SSH 走 443 端口**（很多校园网/公司网只放行 443）
+
+新建或编辑 `C:\Users\你的用户名\.ssh\config`，写入：
+
+```
+Host github.com
+  HostName ssh.github.com
+  Port 443
+  User git
+```
+
+再跑 `ssh -T git@github.com` 验证。
+
+**② 你本来就有代理**（Clash / v2ray 之类，通常本地 7890 端口）
+
+```powershell
+git config --global http.proxy  http://127.0.0.1:7890
+git config --global https.proxy http://127.0.0.1:7890
+
+# 以后想取消：
+# git config --global --unset http.proxy
+# git config --global --unset https.proxy
+```
+
+**③ 实在不行：拿 Gitee 当同步中转**
+
+代码内容完全一样，只是少了那个 GitHub 链接：
+
+```powershell
+git remote add gitee https://gitee.com/你的用户名/racecar.git
+git push gitee main
+```
+
+队友从 Gitee clone 即可。等网络好了再把 `origin` 推上去。
+
+> 别一遇到转圈就换平台。**先试 ① 和 ②。**
+
+### 1.7 验证一下
 
 ```powershell
 git log --oneline -3
 git remote -v
 ```
 
-能看到提交记录、能看到 `origin` 地址，就通了。
+能看到提交记录、能看到 `origin` 指向 github.com，就通了。
 
 ---
 
@@ -381,8 +456,10 @@ git commit -m "直线："P=8""      # ❌ 会报错
 
 ```bash
 sudo apt install -y git
-git clone https://gitee.com/你的用户名/racecar.git
-cd racecar/vision
+git clone git@github.com:你的用户名/racecar.git      # SSH（需要把树莓派的公钥也加到 GitHub）
+# 或 https://github.com/你的用户名/racecar.git       # HTTPS（需要 token）
+
+cd ~/racecar/vision
 
 # 以后更新
 cd ~/racecar && git pull
@@ -444,11 +521,11 @@ cd ~/racecar && git pull
 | 英文报错 | 中文意思 | 怎么办 |
 |---|---|---|
 | `not a git repository` | 你不在仓库目录里 | `cd` 到 `racecar` 目录 |
-| `Please tell me who you are` | 没配名字邮箱 | 跑第 1.4 节那两行 `git config` |
+| `Please tell me who you are` | 没配名字邮箱 | 跑 1.5 节那两行 `git config` |
 | `rejected ... non-fast-forward` | 队友先推了 | `git pull` 再 `push` |
 | `CONFLICT (content)` | 冲突 | 见第 7 节 |
 | `Your local changes would be overwritten` | 你有未提交的改动，pull 会覆盖 | 先 `commit` 或 `checkout -- .` |
-| `Permission denied (publickey)` | SSH 密钥没配 | 改用 https 地址克隆 |
+| `Permission denied (publickey)` | SSH 密钥没配 | 见 1.3 方案 A；或改用 https 地址克隆 |
 | `fatal: refusing to merge unrelated histories` | 两边历史不相干（初始化方式不同） | `git pull origin main --allow-unrelated-histories` |
 
 ---
@@ -460,8 +537,8 @@ cd ~/racecar && git pull
 当前分支：  main（原 master，已改名）
 首次提交：  091c5d5  init: 项目骨架 + 接口协议 v1.0
 已跟踪文件：39 个
-远端：      还没有（需要你们按第 1.3 节建 Gitee 仓库）
+远端：      还没有（需要你们按 1.2 → 1.4 建 GitHub 私有仓库并 push）
 ```
 
-**下一步就一件事：建 Gitee 私有仓库，把 1.3 节那三行命令敲下去。**
+**下一步就一件事：GitHub 建 Private 仓库 → 配 SSH → 敲那三行 push。**
 做完这一步，git 才开始为你们工作。
