@@ -21,7 +21,7 @@ class VisionLink:
         self.port = port or config.SERIAL_PORT
         self.baud = baud or config.SERIAL_BAUD
         self._ser = None
-        self._last_open_try = 0.0
+        self._last_open_try = float("-inf")
         self.sent = 0
         self.failed = 0
 
@@ -29,28 +29,30 @@ class VisionLink:
         if serial is None:
             raise RuntimeError("没装 pyserial：python3 -m pip install pyserial")
         self._ser = serial.Serial(self.port, self.baud, timeout=0.05, write_timeout=0.05)
-        time.sleep(0.2)
         self._ser.reset_output_buffer()
 
     def send(self, frame: bytes) -> bool:
         if self._ser is None:
-            now = time.time()
+            now = time.monotonic()
             if now - self._last_open_try < 1.0:   # 重连不要每帧都试，会卡住主循环
                 return False
             self._last_open_try = now
             try:
                 self._open()
             except Exception as e:
+                self.close()
                 self.failed += 1
                 print(f"[uart] open failed: {e}")
                 return False
         try:
-            self._ser.write(frame)
+            written = self._ser.write(frame)
+            if written != len(frame):
+                raise IOError(f"short write: {written}/{len(frame)} bytes")
             self.sent += 1
             return True
         except Exception as e:
             print(f"[uart] write failed: {e}")
-            self._ser = None
+            self.close()
             self.failed += 1
             return False
 
@@ -58,5 +60,7 @@ class VisionLink:
         if self._ser is not None:
             try:
                 self._ser.close()
+            except Exception as exc:
+                print(f"[uart] close failed: {exc}")
             finally:
                 self._ser = None

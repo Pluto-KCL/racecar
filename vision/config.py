@@ -26,12 +26,18 @@ SIGN_ROI = (0, 0, 640, 240)
 SIGN_MIN_AREA = 1200           # 最小轮廓面积（像素），太小当噪声
 SIGN_MIN_QUALITY = 40          # TUNABLE：低于这个置信度不转向
 SIGN_CONFIRM_FRAMES = 3        # 连续几帧同向才算数（与 STM32 的保护对应）
+SIGN_LOST_FRAMES = 3           # 连续丢失/低置信帧达到此数后清除旧指示牌
 
 # ---------- 颜色顺序 ----------
 # 方案 1（主）：摄像头看 4 个色块，按出现顺序编码
 # 方案 2（备）：TCS34725 贴近测单块颜色（更准，但要求车停在每个块前）
 COLOR_MODE = "camera"          # "camera" | "tcs34725"
 COLOR_MIN_AREA = 800           # 单个色块最小面积
+COLOR_DETECT_EVERY = 2         # 按帧计数检测，不能用时间戳奇偶代替
+COLOR_CONFIRM_FRAMES = 3       # 连续检测到相同顺序后锁存，供裁判记录
+COLOR_MIN_QUALITY = 30
+COLOR_ORDER_REVERSED = False
+OLED_REFRESH_HZ = 5
 
 # HSV 阈值（OpenCV 里 H 是 0~179）。实验室里用 tools/tune_color.py 现场取。
 COLOR_HSV = {

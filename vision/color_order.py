@@ -15,7 +15,6 @@ import config
 
 # 按色块中心 x 排序后取前 4 个。NOTE: 第一次实车跑完要确认"行进方向 ↔ x 方向"是否一致，
 # 若反了就把 ORDER_REVERSED 改成 True（一行的事，别改算法）。
-ORDER_REVERSED = False
 
 
 def _color_of(hsv_px):
@@ -30,6 +29,8 @@ def _color_of(hsv_px):
 
 def detect_color_order(frame_bgr):
     """返回 {'colors': [...], 'valid': 0/1, 'quality': 0-100}"""
+    if frame_bgr is None or frame_bgr.size == 0:
+        return {"colors": [], "valid": 0, "quality": 0}
     hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
     blobs = []
 
@@ -54,14 +55,16 @@ def detect_color_order(frame_bgr):
     # 取面积最大的 4 个（避免远处/反光的碎块），再按 x 排顺序
     blobs.sort(key=lambda b: b["area"], reverse=True)
     blobs = blobs[:4]
-    blobs.sort(key=lambda b: b["cx"], reverse=ORDER_REVERSED)
+    blobs.sort(key=lambda b: b["cx"], reverse=config.COLOR_ORDER_REVERSED)
 
     colors = [b["color"] for b in blobs]
+    if len(set(colors)) != 4:
+        return {"colors": [], "valid": 0, "quality": 0}
     # 置信度：4 个块面积是否接近（差太多说明有遮挡或误识）
     areas = np.array([b["area"] for b in blobs], float)
     spread = areas.std() / max(areas.mean(), 1.0)
     quality = int(max(0, 100 * (1.0 - min(spread, 1.0))))
-    valid = 1 if quality >= 30 else 0
+    valid = 1 if quality >= config.COLOR_MIN_QUALITY else 0
 
     return {"colors": colors, "valid": valid, "quality": quality}
 
