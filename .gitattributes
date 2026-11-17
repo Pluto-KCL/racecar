@@ -1,0 +1,19 @@
+# 统一换行符：Windows 上写、树莓派上跑，必须一致
+* text=auto
+
+# 树莓派要执行的脚本必须是 LF，否则 shebang 报 "bad interpreter"
+*.py   text eol=lf
+*.sh   text eol=lf
+
+# Windows 侧工程文件保持 CRLF
+*.c    text eol=crlf
+*.h    text eol=crlf
+*.uvprojx text eol=crlf
+*.ioc  text eol=crlf
+
+# 二进制
+*.png  binary
+*.jpg  binary
+*.pdf  binary
+*.hex  binary
+*.bin  binary
