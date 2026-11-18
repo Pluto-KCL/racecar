@@ -68,13 +68,20 @@ TCS_GAIN = 4                   # 1 / 4 / 16 / 60
 # ---------- ST7789 SPI LCD ----------
 LCD_SPI_PORT = 0
 LCD_SPI_DEVICE = 0             # CE0 / GPIO8
-LCD_SPI_SPEED_HZ = 32_000_000
+# 16 MHz leaves enough timing margin on long Dupont wires.  Increase only
+# after the panel is known to render reliably.
+LCD_SPI_SPEED_HZ = 16_000_000
 LCD_WIDTH = 240                # 屏幕资料：240(RGB) x 320
 LCD_HEIGHT = 320
 LCD_ROTATE = 1                 # 1=顺时针 90°，横屏显示；可改为 0/2/3
 LCD_DC_PIN = 24                # BCM GPIO24
 LCD_RESET_PIN = 25             # BCM GPIO25
 LCD_BACKLIGHT_PIN = 18         # BCM GPIO18；若 BLK 已接 3.3V，改为 None
+# Most 240x320 modules use a zero origin.  Some boards reserve a controller
+# margin; these two values can be adjusted without changing lcd_display.py.
+LCD_X_OFFSET = 0
+LCD_Y_OFFSET = 0
+LCD_BGR = False                # 面板颜色反向时改为 True
 LCD_BIG_FONT_SIZE = 28
 LCD_SMALL_FONT_SIZE = 20
 
