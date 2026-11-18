@@ -40,7 +40,7 @@ def process(path, outdir):
     if contours:
         c = max(contours, key=cv2.contourArea)
         cv2.drawContours(vis, [c], -1, (0, 255, 0), 2)
-    name = {0: "NONE", 1: "LEFT", 2: "RIGHT"}[r["sign"]]
+    name = {0: "NONE", 1: "LEFT", 2: "RIGHT", 3: "PARK"}[r["sign"]]
     cv2.putText(vis, f"{name} q={r['quality']} cx={r['cx']}", (8, 24),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
 

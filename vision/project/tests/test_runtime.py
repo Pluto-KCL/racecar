@@ -51,6 +51,13 @@ class StateTests(unittest.TestCase):
             self.state.update_sign(proto.SIGN_LEFT, 0)
         self.assertEqual(self.state.sign, proto.SIGN_NONE)
 
+    def test_park_sign_uses_reserved_code(self):
+        for _ in range(config.SIGN_CONFIRM_FRAMES):
+            self.state.update_sign(proto.SIGN_PARK, 80)
+        parsed = proto.parse_frame(self.state.pack())
+        self.assertEqual(parsed["sign"], proto.SIGN_PARK)
+        self.assertTrue(parsed["checksum_ok"])
+
     def test_colors_latch_after_confirmation(self):
         colors = list(proto.COLOR_CODE)
         self.state.update_colors(colors, True, 95)

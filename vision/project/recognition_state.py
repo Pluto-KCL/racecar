@@ -20,7 +20,7 @@ class RecognitionState:
         self._color_count = 0
 
     def update_sign(self, sign, quality):
-        if sign not in (proto.SIGN_LEFT, proto.SIGN_RIGHT) or quality < config.SIGN_MIN_QUALITY:
+        if sign not in (proto.SIGN_LEFT, proto.SIGN_RIGHT, proto.SIGN_PARK) or quality < config.SIGN_MIN_QUALITY:
             self._candidate = proto.SIGN_NONE
             self._sign_count = 0
             self._misses += 1

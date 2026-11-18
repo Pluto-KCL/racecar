@@ -22,7 +22,7 @@ import protocol as proto  # noqa: E402
 from color_order import detect_color_order  # noqa: E402
 from sign import detect_sign  # noqa: E402
 
-NAME2SIGN = {"none": 0, "left": 1, "right": 2}
+NAME2SIGN = {"none": 0, "left": 1, "right": 2, "park": 3}
 
 
 def main():

@@ -3,6 +3,10 @@
 帧（7 字节定长）：
    0xAA | 0x55 | sign | color_valid | color_seq | quality | checksum
    checksum = sign ^ color_valid ^ color_seq ^ quality
+
+``sign=3`` is reserved by the vision side for the field's blue ``P`` garage
+sign; the existing STM32 state machine ignores this value until parking control
+is added there.
 """
 
 import struct
@@ -13,6 +17,7 @@ FRAME_LEN = 7
 SIGN_NONE = 0
 SIGN_LEFT = 1
 SIGN_RIGHT = 2
+SIGN_PARK = 3
 
 # 单块颜色编码（2 bit）
 COLOR_CODE = {"red": 0, "green": 1, "blue": 2, "yellow": 3}
@@ -25,7 +30,8 @@ def checksum(sign: int, color_valid: int, color_seq: int, quality: int) -> int:
 
 def pack_frame(sign: int, color_valid: int, color_seq: int, quality: int) -> bytes:
     """打包一帧。参数越界会被夹紧，不会抛异常（赛场上宁可发个错值也不要崩）。"""
-    sign = max(0, min(2, int(sign)))
+    # 3 保留给实地图车库入口的 P 牌；旧的 0/1/2 含义保持不变。
+    sign = max(0, min(3, int(sign)))
     color_valid = 1 if color_valid else 0
     color_seq = int(color_seq) & 0xFF
     quality = max(0, min(100, int(quality)))

@@ -119,7 +119,7 @@ class Display:
         self.show_lines(["COLOR ORDER", text, f"Q {quality}"], big=True)
 
     def show_status(self, state_name, sign=0, quality=0):
-        arrow = {0: "--", 1: "LEFT", 2: "RIGHT"}.get(sign, "--")
+        arrow = {0: "--", 1: "LEFT", 2: "RIGHT", 3: "PARK"}.get(sign, "--")
         self.show_lines([state_name, f"SIGN {arrow}", f"Q {quality}"], big=True)
 
     def close(self):
