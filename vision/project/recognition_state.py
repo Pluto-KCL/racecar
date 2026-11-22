@@ -18,6 +18,10 @@ class RecognitionState:
         self._misses = 0
         self._color_candidate = ()
         self._color_count = 0
+        self.camera_ok = False
+
+    def set_camera_ok(self, camera_ok):
+        self.camera_ok = bool(camera_ok)
 
     def update_sign(self, sign, quality):
         if sign not in (proto.SIGN_LEFT, proto.SIGN_RIGHT, proto.SIGN_PARK) or quality < config.SIGN_MIN_QUALITY:
@@ -51,9 +55,13 @@ class RecognitionState:
             self.colors, self.color_quality = list(candidate), quality
 
     def pack(self):
+        if not self.camera_ok:
+            return proto.pack_frame(proto.SIGN_NONE, 0, 0, 0)
         # 协议只有一个 quality。存在转向时必须反映转向置信度，
         # 不能让历史颜色的高置信度抬高当前指示牌置信度。
         quality = self.sign_quality if self.sign else self.color_quality
+        if not self.sign and not self.colors and self.camera_ok:
+            quality = 1  # 摄像头正常但当前没有识别结果
         return proto.pack_frame(self.sign, bool(self.colors),
                                 proto.encode_seq(self.colors) if self.colors else 0,
                                 quality)

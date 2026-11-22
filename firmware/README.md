@@ -2,11 +2,15 @@
 
 ## 这个目录怎么用
 
+CubeMX 从新建工程到生成代码的配置步骤见 [docs/11_STM32CubeMX初始化配置教程.md](../docs/11_STM32CubeMX初始化配置教程.md)。当前仓库已有生成好的 `.ioc`：`firmware/cubemx/RaceCarSTM32/racecar/racecar.ioc`，业务代码也在该工程的 `Core/Inc|Src` 里；仓库根目录下的 `firmware/Core/Inc|Src` 已清空。
+
+已生成工程的逐项检查和修正顺序见 [docs/12_CubeMX项目检查报告.md](../docs/12_CubeMX项目检查报告.md)。
+
 **不要**把这里的 `app.c` 当 `main.c` 用。正确姿势：
 
 1. STM32CubeMX 新建工程，芯片选 **STM32F103C8Tx**，配好外设（下表）
 2. 生成 Keil 或 STM32CubeIDE 工程
-3. 把 `Core/Inc/*.h`、`Core/Src/*.c` 复制进生成的工程（同名目录）
+3. 把业务文件放进生成工程的 `Core/Inc`、`Core/Src`（当前实际位置：`firmware/cubemx/RaceCarSTM32/racecar/Core/Inc|Src`；根目录 `firmware/Core` 已空）
 4. 打开 CubeMX 生成的 `main.c`，在 `/* USER CODE BEGIN 2 */` 里加：
 
 ```c
@@ -67,9 +71,11 @@
 
 ## 三条安全保护（`state.c` 里已实现，别删）
 
-- **串口 200 ms 无帧** → 不再执行 `sign` 转向，只循迹
+- **串口 200 ms 无帧** → 进入锁存 `STOP`，禁止继续使用旧视觉指令行驶
 - **超声 < 15 cm** → 停车（避障阶段才启用）
 - **上电先 IDLE**，必须按键才进 RUN（防止一上电就冲出去）
+
+视觉指示牌在 STM32 侧按有效帧计数连续确认 3 帧，不能依赖状态机循环次数。正式版本还必须在 CubeMX 中启用独立看门狗、增加实体急停，并把 `DEBUG_UART_PRINT` 关闭或迁移到独立调试接口。
 
 ## 编译
 

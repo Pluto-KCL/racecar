@@ -14,6 +14,7 @@
 
 import argparse
 import os
+import threading
 import time
 from collections import deque
 
@@ -53,6 +54,24 @@ def main():
     # 跨帧确认与失效策略独立于硬件调度。
     state = RecognitionState()
     frame_number = 0
+    frame_lock = threading.Lock()
+    stop_sender = threading.Event()
+    latest_frame = state.pack()
+
+    def send_loop():
+        next_send = time.monotonic()
+        while not stop_sender.is_set():
+            with frame_lock:
+                frame_out = latest_frame
+            link.send(frame_out)
+            next_send += period
+            wait = max(0.0, next_send - time.monotonic())
+            stop_sender.wait(wait)
+
+    sender_thread = None
+    if link is not None:
+        sender_thread = threading.Thread(target=send_loop, name="uart-sender", daemon=True)
+        sender_thread.start()
     if config.COLOR_MODE != "camera":
         cam.release()
         raise ValueError("主循环目前只支持 COLOR_MODE=camera；TCS34725 请单独校准使用")
@@ -67,6 +86,7 @@ def main():
             except Exception as exc:
                 print(f"[cam] read failed: {exc}")
                 frame = None
+            state.set_camera_ok(frame is not None)
 
             # ---- 指示牌（每帧都做，牌是"路过"的，漏了就没了）----
             try:
@@ -87,9 +107,8 @@ def main():
             frame_number += 1
 
             # ---- 发送 ----
-            frame_out = state.pack()
-            if link is not None:
-                link.send(frame_out)
+            with frame_lock:
+                latest_frame = state.pack()
 
             # ---- 显示（5 Hz 足够，避免 SPI 刷屏影响识别）----
             if t0 - last_lcd > 1.0 / config.LCD_REFRESH_HZ:
@@ -118,6 +137,9 @@ def main():
     except KeyboardInterrupt:
         print("\n[main] stopped by user")
     finally:
+        stop_sender.set()
+        if sender_thread is not None:
+            sender_thread.join(timeout=1.0)
         cam.release()
         if link is not None:
             link.close()

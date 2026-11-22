@@ -18,9 +18,11 @@
 
 ## 建议逐步验收
 
-1. 在项目根目录运行无硬件回归测试：`python -m unittest discover -s vision/tests -v`。
+> 以下命令除特别说明外，都在 `vision/project/` 下执行（视觉代码不在 `vision/` 根目录）。
+
+1. 在项目根目录运行无硬件回归测试：`python -m unittest discover -s vision/project/tests -v`。
 2. 在树莓派安装 `requirements.txt` 中的依赖和系统 OpenCV/picamera2；PC 调图需要额外安装 `opencv-python`。
-3. 进入 `vision/`，运行 `python tools/capture.py --label left --n 30`，再采集 right、none 和 color。
+3. 进入 `vision/project/`，运行 `python tools/capture.py --label left --n 30`，再采集 right、none 和 color。
 4. 用 `python tools/tune_sign.py media/capture/left` 检查分割结果，再用 `python tools/replay.py media/capture/left --kind sign` 回放。三类指示牌都要测。
 5. 启用 SPI 后先运行 `python tools/test_lcd.py` 检查 ST7789，再用 `python main.py --no-uart` 检查连续确认与显示，最后用 `python main.py --port /dev/serial0` 联调七字节帧。
 6. 拿走指示牌、遮住镜头、拔掉串口分别验证：旧转向应清除、心跳应持续、串口恢复后应能重连。

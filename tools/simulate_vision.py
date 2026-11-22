@@ -21,17 +21,18 @@ import argparse
 import os
 import random
 import sys
+import threading
 import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "vision"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "vision", "project"))
 
 from protocol import pack_frame, encode_seq   # noqa: E402
 
 ORDERS = [
-    [0, 1, 2, 3],   # 红绿蓝黄
-    [0, 1, 3, 2],
-    [3, 2, 0, 1],
-    [1, 3, 0, 2],
+    ["red", "green", "blue", "yellow"],
+    ["red", "green", "yellow", "blue"],
+    ["yellow", "blue", "red", "green"],
+    ["green", "yellow", "red", "blue"],
 ]
 
 
@@ -58,6 +59,20 @@ def main():
     ser = serial.Serial(args.port, args.baud, timeout=0.1)
     print(__doc__)
 
+    command = {"sign": 0, "seq": None, "quality": 90}
+    command_lock = threading.Lock()
+    stop_heartbeat = threading.Event()
+
+    def heartbeat():
+        while not stop_heartbeat.is_set():
+            with command_lock:
+                current = dict(command)
+            send(ser, current["sign"], current["seq"], current["quality"])
+            stop_heartbeat.wait(0.04)
+
+    heartbeat_thread = threading.Thread(target=heartbeat, name="vision-heartbeat", daemon=True)
+    heartbeat_thread.start()
+
     i = 0
     while True:
         try:
@@ -68,22 +83,22 @@ def main():
         if cmd in ("q", "quit", "exit"):
             break
         elif cmd in ("1", "l"):
-            for _ in range(5):
-                send(ser, 1)
-                time.sleep(0.04)
-            print("已发：左转 x5")
+            with command_lock:
+                command.update(sign=1, seq=None)
+            print("已设置：左转")
         elif cmd in ("2", "r"):
-            for _ in range(5):
-                send(ser, 2)
-                time.sleep(0.04)
-            print("已发：右转 x5")
+            with command_lock:
+                command.update(sign=2, seq=None)
+            print("已设置：右转")
         elif cmd in ("0", "n"):
-            send(ser, 0)
+            with command_lock:
+                command.update(sign=0, seq=None)
             print("已发：无指示")
         elif cmd == "c":
             seq = ORDERS[i % len(ORDERS)]
             i += 1
-            send(ser, 0, seq)
+            with command_lock:
+                command.update(sign=0, seq=seq)
             print(f"已发颜色：{seq}")
         elif cmd == "a":
             print("自动模式，Ctrl+C 停")
@@ -91,7 +106,8 @@ def main():
                 while True:
                     s = random.choice([0, 0, 1, 2])
                     seq = random.choice(ORDERS) if random.random() < 0.5 else None
-                    send(ser, s, seq)
+                    with command_lock:
+                        command.update(sign=s, seq=seq)
                     print(f"  auto sign={s} seq={seq}")
                     time.sleep(2.0)
             except KeyboardInterrupt:
@@ -99,6 +115,8 @@ def main():
         else:
             print("看不懂，输 1/2/0/c/a/q")
 
+    stop_heartbeat.set()
+    heartbeat_thread.join(timeout=1.0)
     ser.close()
     return 0
 

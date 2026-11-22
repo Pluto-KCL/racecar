@@ -33,19 +33,30 @@
 racecar/
 ├── docs/            00 git 用法、01 计划、02 采购接线、03 接口协议（一切"约定"都在这）
 ├── vision/          B：树莓派 Python，取图 → 识别 → 打包 → 串口发
-│   └── tools/       离线调参/回放/存图（不装车也能干）
+│   ├── project/     视觉主程序（main.py、config.py 及各识别/显示模块）
+│   │   ├── tools/   离线调参/回放/存图（capture.py、replay.py、tune_sign.py…）
+│   │   └── tests/   无硬件回归测试
+│   └── backup/      历史备份资料，非运行代码
 ├── firmware/        C：STM32 C 代码，收帧 → 状态机 → PID → PWM
+│   ├── Core/        已清空，仅剩空目录 Inc/、Src/（业务代码已迁到下面的工程里）
+│   └── cubemx/RaceCarSTM32/racecar/
+│       ├── Core/
+│       │   ├── Inc/       业务 .h（含 config.h）
+│       │   └── Src/       业务 .c
+│       └── MDK-ARM/       Keil 工程
 ├── tools/           PC 端：看帧、模拟视觉板、画曲线
 ├── logs/            每次调车 5 行记录 + 数据
 └── media/           照片、视频（大文件，别塞进 git）
 ```
+
+> 根目录的 `$dest/`、`tmp/` 是临时参考资料（旧 51 工程、PDF 截图等），不属于项目结构，不要往里写新代码或文档。
 
 ## 5 分钟跑起来
 
 ### 树莓派（B）
 
 ```bash
-cd vision
+cd vision/project
 python3 -m pip install -r requirements.txt   # picamera2 用 apt: sudo apt install -y python3-picamera2
 python3 tools/capture.py                     # 先只验证摄像头能存图
 python3 main.py                              # 跑主循环
@@ -54,20 +65,20 @@ python3 main.py                              # 跑主循环
 ### STM32（C）
 
 1. CubeMX 生成工程（F103C8T6，USART1 115200、TIM1/TIM3 PWM、ADC1 8 通道、I2C1）
-2. 把 `firmware/Core/Inc|Src` 里的文件加进工程
+2. 业务代码已在 `firmware/cubemx/RaceCarSTM32/racecar/Core/Inc|Src`（`firmware/Core/Inc|Src` 现在是空目录），直接编译该工程即可
 3. 先只烧 `main.c` 里的"电机正反转自检"，确认轮子转，再接循迹
 4. 编译烧录用 Keil / STM32CubeIDE 都行，见 [firmware/README.md](firmware/README.md)
 
 ### 两边联调（C + B）
 
 ```bash
-python tools/view_frames.py --port COM5      # 先确认帧格式对得上
-python tools/simulate_vision.py --port COM5  # 没接树莓派时，用 PC 假装是视觉板
+python tools/view_frames.py COM5        # 先确认帧格式对得上（端口是位置参数）
+python tools/simulate_vision.py COM5    # 没接树莓派时，用 PC 假装是视觉板
 ```
 
 ## 三条铁律
 
-1. **所有可调参数只在两个文件里**：`vision/config.py`、`firmware/Core/Inc/config.h`。散落在别处的常量，三天后没人记得为什么是那个数。
+1. **所有可调参数只在两个文件里**：`vision/project/config.py`、`firmware/cubemx/RaceCarSTM32/racecar/Core/Inc/config.h`。散落在别处的常量，三天后没人记得为什么是那个数。
 2. **接口只在一处定义**：[docs/03_接口协议.md](docs/03_接口协议.md)。改协议 = 改这个文件 + 同时改两边 + 群里说一声。
 3. **每次只改一个变量**（速度 / 阈值 / 传感器高度 / PID 之一），改完跑 10 次统计成功率。
 

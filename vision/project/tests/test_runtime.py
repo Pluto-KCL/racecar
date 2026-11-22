@@ -17,10 +17,12 @@ class StateTests(unittest.TestCase):
         self.state = RecognitionState()
 
     def confirm_sign(self, sign=proto.SIGN_LEFT, quality=60):
+        self.state.set_camera_ok(True)
         for _ in range(config.SIGN_CONFIRM_FRAMES):
             self.state.update_sign(sign, quality)
 
     def confirm_colors(self):
+        self.state.set_camera_ok(True)
         for _ in range(config.COLOR_CONFIRM_FRAMES):
             self.state.update_colors(list(proto.COLOR_CODE), True, 95)
 
@@ -52,6 +54,7 @@ class StateTests(unittest.TestCase):
         self.assertEqual(self.state.sign, proto.SIGN_NONE)
 
     def test_park_sign_uses_reserved_code(self):
+        self.state.set_camera_ok(True)
         for _ in range(config.SIGN_CONFIRM_FRAMES):
             self.state.update_sign(proto.SIGN_PARK, 80)
         parsed = proto.parse_frame(self.state.pack())
@@ -83,6 +86,12 @@ class StateTests(unittest.TestCase):
 
     def test_empty_frame_is_valid_heartbeat(self):
         self.assertEqual(self.state.pack(), bytes.fromhex("aa 55 00 00 00 00 00"))
+
+    def test_camera_heartbeat_has_nonzero_health_quality(self):
+        self.state.set_camera_ok(True)
+        parsed = proto.parse_frame(self.state.pack())
+        self.assertEqual(parsed["quality"], 1)
+        self.assertTrue(parsed["checksum_ok"])
 
 
 class LinkTests(unittest.TestCase):
